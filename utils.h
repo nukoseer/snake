@@ -59,5 +59,46 @@ static inline i32 modulo(i32 a, i32 b)
     return (a % b + b) % b;
 }
 
+static inline u32 string_length(const u8* string)
+{
+    u32 length = 0;
+
+    while (string && *string)
+    {
+        ++length;
+        ++string;
+    }
+
+    return length;
+}
+
+static void u32_to_string(u8* string, u32 value)
+{
+    u32 number = value;
+    i32 digit_count = 0;
+
+    while (number)
+    {
+        number /= 10;
+        ++digit_count;
+    }
+
+    number = value;
+
+    if (!number)
+    {
+        ++digit_count;
+    }
+
+    string[digit_count] = 0;
+
+    while (digit_count > 0)
+    {
+        string[digit_count - 1] = (u8)(number % 10) + '0';
+        number /= 10;
+        --digit_count;
+    }
+}
+
 #define H_UTILS_H
 #endif

@@ -56,23 +56,45 @@ function platform_print_text(string_address)
     console.log(string);
 }
 
-function platform_draw_text(string_address, x, y, size, color)
+function platform_draw_text(string_address, x, y, size, color, fill, alignment)
 {
     const buffer = wasm.instance.exports.memory.buffer;
     const string = convert_to_string(buffer, string_address)
+    const align = convert_to_string(buffer, alignment)
 
-    context.font = size + "px Liberation Mono";
-    context.textAlign = "center";
-    context.fillStyle = color_to_hex(color);
-    context.fillText(string, x, y);
+    context.font = size + "px Iosevka Fixed Web";
+    context.textAlign = align;
+
+    if (fill)
+    {
+	context.fillStyle = color_to_hex(color);
+	context.fillText(string, x, y);
+    }
+    else
+    {
+	context.strokeStyle = color_to_hex(color);
+	context.strokeText(string, x, y);
+    }
 }
 
-function platform_draw_number(number, x, y, size, color)
+function platform_draw_number(number, x, y, size, color, fill, alignment)
 {
-    context.font = "bold " + size + "px Liberation Mono";
-    context.textAlign = "center";
-    context.fillStyle = color_to_hex(color);
-    context.fillText(number.toString(10), x, y);
+    const buffer = wasm.instance.exports.memory.buffer;
+    const align = convert_to_string(buffer, alignment)
+
+    context.font = size + "px Iosevka Fixed Web";
+    context.textAlign = align;
+
+    if (fill)
+    {
+	context.fillStyle = color_to_hex(color);
+	context.fillText(number.toString(10), x, y);
+    }
+    else
+    {
+        context.strokeStyle = color_to_hex(color);
+	context.strokeText(number.toString(10), x, y);
+    }
 }
 
 function platform_draw_rectangle(x, y, width, height, color, fill)
@@ -101,7 +123,7 @@ function game_loop(timestamp)
     }
 
     previous_timestamp = timestamp;
-    window.requestAnimationFrame(game_loop);	
+    window.requestAnimationFrame(game_loop);
 }
 
 WebAssembly.instantiateStreaming(

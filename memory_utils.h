@@ -63,14 +63,19 @@ static inline void* push_size(MemoryArena* memory_arena, memory_size size)
     return result;
 }
 
-static inline void memory_zero(void* memory, memory_size size)
+static inline void memory_set(void* memory, u8 character, memory_size size)
 {
     u8* pointer = (u8*)memory;
     
     while (size--)
     {
-        *pointer++ = 0;
+        *pointer++ = character;
     }
+}
+
+static inline void memory_zero(void* memory, memory_size size)
+{
+    memory_set(memory, 0, size);
 }
 
 static inline memory_size memory_copy(void* destination, void* source, memory_size size)
