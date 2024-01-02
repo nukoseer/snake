@@ -223,12 +223,12 @@ static void draw_coord(GameState* state)
     //     }   
     // }
     
-    draw_rectangle(state->width / 2, 0,
-                   state->width / 2, state->height, 
-                   SECONDARY_ACENT_COLOR, 0);
-    draw_rectangle(0,            state->height / 2,
-                   state->width, state->height / 2, 
-                   SECONDARY_ACENT_COLOR, 0);
+    // draw_rectangle(state->width / 2, 0,
+    //                state->width / 2, state->height, 
+    //                SECONDARY_ACENT_COLOR, 0);
+    // draw_rectangle(0,            state->height / 2,
+    //                state->width, state->height / 2, 
+    //                SECONDARY_ACENT_COLOR, 0);
 }
 
 static void snake_init(GameState* state)
@@ -336,6 +336,11 @@ void game_update(f32 delta_time)
             sentinel->cell.x = modulo(sentinel->cell.x + snake->direction.x, game_state->column_count);
             sentinel->cell.y = modulo(sentinel->cell.y + snake->direction.y, game_state->row_count);
 
+            if (sentinel->cell.x == 0)
+            {
+                ++game_state->score;
+            }
+
             // NOTE: This if check is for initial snake state.
             // Maybe it is not that important.
             if (!(snake->direction.x == 0 && snake->direction.y == 0))
@@ -373,9 +378,10 @@ void game_render(void)
     else if (game_state->run_state == RUN_STATE_START_GAME)
     {
         clear_screen(game_state);
-        draw_text((u8*)"SNAKE", game_state->width / 2, game_state->height / 2, 112, PRIMARY_ACENT_COLOR, 1, GET_ALIGNMENT(ALIGNMENT_CENTER));
+        draw_text((u8*)"SNAKE", game_state->width / 2, game_state->height * 2.0f / 5.0f, 300, PRIMARY_ACENT_COLOR, 1, GET_ALIGNMENT(ALIGNMENT_CENTER));
         draw_coord(game_state);
-        draw_score(game_state, game_state->width / 2, game_state->height / 2 + 112, 84, GET_ALIGNMENT(ALIGNMENT_CENTER));
+        draw_score(game_state, game_state->width / 2, game_state->height * 2.0f / 5.0f + 84.0f * 3.0f / 2.0f, 84, GET_ALIGNMENT(ALIGNMENT_CENTER));
+        draw_text((u8*)"Press <space> to continue", game_state->width / 2, game_state->height * 4 / 5, 36, PRIMARY_ACENT_COLOR, 1, GET_ALIGNMENT(ALIGNMENT_CENTER));
     }
 }
 
