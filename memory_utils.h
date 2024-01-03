@@ -102,5 +102,16 @@ static inline void* push_size_zero(MemoryArena* memory_arena, memory_size size)
     return result;
 }
 
+static inline MemoryArena* get_sub_arena(MemoryArena* memory_arena, memory_size size)
+{
+    MemoryArena* sub_arena = push_size(memory_arena, size);
+
+    sub_arena->memory = sub_arena + sizeof(MemoryArena);
+    sub_arena->used = 0;
+    sub_arena->size = size - sizeof(MemoryArena);
+
+    return sub_arena;
+}
+
 #define H_MEMORY_UTILS_H
 #endif

@@ -264,9 +264,9 @@ static void snake_restart(GameState* state)
 static void snake_init(GameState* state)
 {
     Snake* snake = &state->snake;
-    MemoryArena* cell_arena = get_memory_arena((u8*)state->arena->memory + state->arena->used,
-                                               SNAKE_MAX_LENGTH * sizeof(CellNode) + sizeof(MemoryArena));
-    snake->cell_memory.arena = cell_arena;
+    u32 max_snake_cell_size = SNAKE_MAX_LENGTH * sizeof(CellNode) + sizeof(MemoryArena);
+
+    snake->cell_memory.arena = get_sub_arena(state->arena, max_snake_cell_size);
  }
 
 static void game_restart(GameState* state)
@@ -290,7 +290,7 @@ u32 get_arena_size(void)
 
 u32 get_arena_used(void)
 {
-    return game_state->snake.direction.x;
+    return game_state->arena->used;
 }
 
 void game_key_down(u32 key)

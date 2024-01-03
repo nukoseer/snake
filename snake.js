@@ -142,6 +142,11 @@ WebAssembly.instantiateStreaming(
     {
 	wasm = w;
 
+	context.font = "14px Iosevka Fixed Web";
+        context.textAlign = "center";
+	context.fillStyle = "#FFFFFF"
+	context.fillText("", 0, 0);
+
 	wasm.instance.exports.game_init(application.width, application.height);
 
 	document.addEventListener(
