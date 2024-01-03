@@ -15,7 +15,7 @@ typedef struct MemoryArena
 
 typedef struct TemporaryMemory
 {
-    MemoryArena* memory_arena;
+    MemoryArena* arena;
     memory_size initial_size;
 } TemporaryMemory;
 
@@ -39,7 +39,7 @@ static inline TemporaryMemory begin_temporary_memory(MemoryArena* memory_arena)
 {
     TemporaryMemory temporary_memory = { 0 };
 
-    temporary_memory.memory_arena = memory_arena;
+    temporary_memory.arena = memory_arena;
     temporary_memory.initial_size = memory_arena->used;
 
     return temporary_memory;
@@ -47,7 +47,7 @@ static inline TemporaryMemory begin_temporary_memory(MemoryArena* memory_arena)
 
 static inline void end_temporary_memory(TemporaryMemory temporary_memory)
 {
-    temporary_memory.memory_arena->used = temporary_memory.initial_size;
+    temporary_memory.arena->used = temporary_memory.initial_size;
 }
 
 // TODO: Probably, we should also handle alignment in these functions.

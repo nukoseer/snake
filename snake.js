@@ -144,9 +144,6 @@ WebAssembly.instantiateStreaming(
 
 	wasm.instance.exports.game_init(application.width, application.height);
 
-	// context.strokeStyle = "black";
-	// context.strokeRect(0, 0, application.width, application.height);
-
 	document.addEventListener(
 	    "keydown",
 	    function(event)

@@ -100,5 +100,18 @@ static void u32_to_string(u8* string, u32 value)
     }
 }
 
+static u32 lfsr_rand(void)
+{
+    static u16 start_value = 0xACE1U;
+    u16 lfsr = start_value;
+    u32 bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5) ) & 1;
+
+    lfsr = (lfsr >> 1) | (bit << 15);
+
+    ++start_value;
+    
+    return lfsr;
+}
+
 #define H_UTILS_H
 #endif
