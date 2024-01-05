@@ -3,13 +3,13 @@
 IF NOT EXIST build mkdir build
 pushd build
 
-set debug_compiler_flags=-DDEBUG
+set debug_compiler_flags=
 set release_compiler_flags=-flto -O3
 set common_compiler_flags=--target=wasm32 -nostdlib -Wall -Werror -Wno-unused-function
 
 set debug_linker_flags=
 set release_linker_flags=-Wl,--lto-O3
-set common_linker_flags=-Wl,--no-entry  -Wl,--allow-undefined -Wl,--export=game_init -Wl,--export=game_key_down -Wl,--export=game_update -Wl,--export=game_render -Wl,--export=get_arena_used -Wl,--export=get_arena_size
+set common_linker_flags=-Wl,--no-entry  -Wl,--allow-undefined -Wl,--export=game_init -Wl,--export=game_key_down -Wl,--export=game_update -Wl,--export=game_render
 
 set debug=no
 

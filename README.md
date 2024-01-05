@@ -1,8 +1,10 @@
 # Snake
-Classic snake game written in pure C, targeting WebAssembly.
+Classic snake game written in C, targeting WebAssembly.
 
 # Shorcuts
 Movement: `W`, `A`, `S`, `D`
+
+Switch theme: `t`
 
 Resume/Stop: `SPACE`
 

@@ -153,12 +153,21 @@ WebAssembly.instantiateStreaming(
 	    "keydown",
 	    function(event)
 	    {
-		wasm.instance.exports.game_key_down(event.key.charCodeAt());
+		let key = 0;
+		
+		if (event.keyCode === 37 || event.keyCode === 38 ||
+		    event.keyCode === 39 || event.keyCode === 40)
+                {
+		    key = event.keyCode;
+                }
+		else
+		{
+		    key = event.key.charCodeAt();
+		}
+
+		wasm.instance.exports.game_key_down(key);
 	    },
 	);
-
-	console.log(wasm.instance.exports.get_arena_used());
-	console.log(wasm.instance.exports.get_arena_size());
 
 	window.requestAnimationFrame(game_loop);
     }

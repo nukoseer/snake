@@ -3,23 +3,15 @@
 #include "snake.h"
 
 #define CELL_SIZE      (50)
-#define CELL_CENTER(n) ((n) * CELL_SIZE + (CELL_SIZE / 2))
 
 #define STEP_INTERVAL_DEFAULT (60.0f / 1000.0f)
 #define SNAKE_DEFAULT_LENGTH  (3)
 #define SNAKE_MAX_LENGTH      (100 + SNAKE_DEFAULT_LENGTH)
 
-#define ARROW_LEFT_SYMBOL  ((u8*)"\xCB\x82")
-#define ARROW_RIGHT_SYMBOL ((u8*)"\xCB\x83")
-#define ARROW_DOWN_SYMBOL  ((u8*)"\xCB\x84")
-#define ARROW_UP_SYMBOL    ((u8*)"\xCB\x85")
-
-#define PRIMARY_ACENT_COLOR     (0xDA1A21FF) // NOTE: Maximum Red
-#define PRIMARY_BASE_COLOR      (0xECE0D3FF) // NOTE: White Coffe
-#define SECONDARY_ACENT_COLOR   (0x212120FF) // NOTE: Raisin Black
-#define SECONDARY_BASE_COLOR    (0xF5FBFCFF) // NOTE: Mint Cream
-
-#define BACKGROUND_COLOR   PRIMARY_BASE_COLOR
+#define MAXIMUM_RED_COLOR     (0xDA1A21FF)
+#define WHITE_COFFE_COLOR     (0xECE0D3FF)
+#define RAISIN_BLACK_COLOR    (0x212120CE)
+#define MINT_CREAM_COLOR      (0xF5FBFCFF)
 
 typedef struct Cell
 {
@@ -78,11 +70,10 @@ typedef struct GameState
     u32 column_count;
 
     Snake snake;
+    Egg egg;
+
     u32 score;
     u8 score_string[16];
-    u8 final_score_string[16];
-
-    Egg egg;
 
     f32 step_interval;
     f32 delta_time;
@@ -91,6 +82,11 @@ typedef struct GameState
 
     RunState run_state;
     u32 won;
+
+    b32 theme;
+    u32 primary_acent_color;
+    u32 primary_base_color;
+    u32 secondary_acent_color;
 } GameState;
 
 extern u8 __heap_base;
@@ -122,48 +118,6 @@ static CellNode* cell_node_create_and_insert(MemoryArena* arena, CellNode* senti
     return cell_node;
 }
 
-#ifdef DEBUG
-static u8* get_arrow_symbol(CellNode* node)
-{
-    Snake* snake = &game_state->snake;
-    u8* symbol = 0;
-    Direction* direction = 0;
-
-    if (node->prev != &snake->head)
-    {
-        direction = &node->direction;
-    }
-    else
-    {
-        direction = &snake->direction;
-    }
-
-    if (direction->x == -1)
-    {
-        symbol = ARROW_LEFT_SYMBOL;
-    }
-    else if (direction->x == 1)
-    {
-        symbol = ARROW_RIGHT_SYMBOL;
-    }
-    else if (direction->y == -1)
-    {
-        symbol = ARROW_DOWN_SYMBOL;
-    }
-    else if (direction->y == 1)
-    {
-        symbol = ARROW_UP_SYMBOL;
-    }
-
-    return symbol;
-}
-#endif
-
-static void print_text(const u8* text)
-{
-    platform_print_text(text);
-}
-
 static void draw_text(const u8* text, u32 x, u32 y, u32 size, u32 color, u32 fill, u8* alignment)
 {
     platform_draw_text(text, x, y, size, color, fill, alignment);
@@ -181,45 +135,39 @@ static void draw_rectangle(u32 x, u32 y, u32 width, u32 height, u32 color, u32 f
 
 static void clear_screen(GameState* state)
 {
-    draw_rectangle(0, 0, state->width, state->height, BACKGROUND_COLOR, 1);
-    draw_rectangle(0, 0, state->width, state->height, PRIMARY_ACENT_COLOR, 0);
+    draw_rectangle(0, 0, state->width, state->height, state->primary_base_color, 1);
+    draw_rectangle(0, 0, state->width, state->height, state->primary_acent_color, 0);
 }
 
-static void draw_egg(Egg* egg)
+static void draw_egg(GameState* state)
 {
+    Egg* egg = &state->egg;
+
     draw_rectangle(egg->cell.x * CELL_SIZE, egg->cell.y * CELL_SIZE,
-                   CELL_SIZE, CELL_SIZE, (SECONDARY_ACENT_COLOR & 0xFFFFFF00) | 0xCE, 1);
+                   CELL_SIZE, CELL_SIZE, state->secondary_acent_color, 1);
 }
 
-static void draw_snake(Snake* snake)
+static void draw_snake(GameState* state)
 {
+    Snake* snake = &state->snake;
     CellNode* node = snake->head.next;
     Cell cell = node->cell;
 
-    draw_rectangle(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, (SECONDARY_ACENT_COLOR & 0xFFFFFF00) | 0xCE, 1);
+    draw_rectangle(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, state->secondary_acent_color, 1);
 
     for (node = node->next; node != &snake->head; node = node->next)
     {
         cell = node->cell;
 
-        draw_rectangle(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, PRIMARY_ACENT_COLOR, 1);
-        draw_rectangle(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, PRIMARY_BASE_COLOR, 0);
-
-#ifdef DEBUG
-        u8* arrow_symbol = get_arrow_symbol(node);
-
-        if (arrow_symbol)
-        {
-            draw_text(arrow_symbol, CELL_CENTER(cell.x), CELL_CENTER(cell.y) + 6, 24, 0x000000FF, 1, alignments[ALIGNMENT_CENTER]);
-        }
-#endif
+        draw_rectangle(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, state->primary_acent_color, 1);
+        draw_rectangle(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, state->primary_base_color, 0);
     }
 }
 
 static void draw_score(GameState* state, u32 x, u32 y, u32 size, u8* alignment)
 {
     u32_to_string(state->score_string + 7, state->score);
-    draw_text(state->score_string, x, y, size, PRIMARY_ACENT_COLOR, 1, alignment);
+    draw_text(state->score_string, x, y, size, state->primary_acent_color, 1, alignment);
 }
 
 static void draw_menu(GameState* state, const u8* title)
@@ -227,10 +175,10 @@ static void draw_menu(GameState* state, const u8* title)
     u32 step_y = state->height / 5;
     u32 y = 2 * step_y;
 
-    draw_text(title, state->width / 2, y, 300, PRIMARY_ACENT_COLOR, 1, GET_ALIGNMENT(ALIGNMENT_CENTER));
+    draw_text(title, state->width / 2, y, 300, state->primary_acent_color, 1, GET_ALIGNMENT(ALIGNMENT_CENTER));
     draw_score(state, state->width / 2, y + 84 * 3.0f / 2.0f, 84, GET_ALIGNMENT(ALIGNMENT_CENTER));
     y += step_y * 2;
-    draw_text((u8*)"Press <space> to continue", state->width / 2, y, 36, PRIMARY_ACENT_COLOR, 1, GET_ALIGNMENT(ALIGNMENT_CENTER));   
+    draw_text((u8*)"Press <space> to continue", state->width / 2, y, 36, state->primary_acent_color, 1, GET_ALIGNMENT(ALIGNMENT_CENTER));   
 }
 
 static void egg_restart(GameState* state)
@@ -283,16 +231,6 @@ static void game_restart(GameState* state)
     snake_restart(state);
 }
 
-u32 get_arena_size(void)
-{
-    return game_state->arena->size;
-}
-
-u32 get_arena_used(void)
-{
-    return game_state->arena->used;
-}
-
 void game_key_down(u32 key)
 {
     if (key == 32)
@@ -310,6 +248,23 @@ void game_key_down(u32 key)
             game_state->run_state = RUN_STATE_PLAY;
             game_restart(game_state);
         }
+    }
+    else if (key == 't')
+    {
+        if (game_state->theme)
+        {
+            game_state->primary_acent_color = WHITE_COFFE_COLOR;
+            game_state->primary_base_color = RAISIN_BLACK_COLOR;
+            game_state->secondary_acent_color = MAXIMUM_RED_COLOR;
+        }
+        else
+        {
+            game_state->primary_acent_color = MAXIMUM_RED_COLOR;
+            game_state->primary_base_color = WHITE_COFFE_COLOR;
+            game_state->secondary_acent_color = RAISIN_BLACK_COLOR;
+        }
+
+        game_state->theme = !game_state->theme;
     }
     else if (game_state->run_state == RUN_STATE_PLAY)
     {
@@ -332,6 +287,8 @@ void game_update(f32 delta_time)
             switch (game_state->key_pressed)
             {
                 case 'a':
+                case 'A':
+                case 37:
                 {
                     if (snake->direction.x != 1)
                     {
@@ -341,6 +298,8 @@ void game_update(f32 delta_time)
                 }
                 break;
                 case 'd':
+                case 'D':
+                case 39:
                 {
                     if (snake->direction.x != -1)
                     {
@@ -350,6 +309,8 @@ void game_update(f32 delta_time)
                 }
                 break;
                 case 'w':
+                case 'W':
+                case 38:
                 {
                     if (snake->direction.y != 1)
                     {
@@ -359,6 +320,8 @@ void game_update(f32 delta_time)
                 }
                 break;
                 case 's':
+                case 'S':
+                case 40:
                 {
                     if (snake->direction.y != -1)
                     {
@@ -426,8 +389,8 @@ void game_render(void)
         if (game_state->step_interval == STEP_INTERVAL_DEFAULT)
         {
             clear_screen(game_state);
-            draw_egg(&game_state->egg);
-            draw_snake(&game_state->snake);
+            draw_egg(game_state);
+            draw_snake(game_state);
 
             u32 size = 36;
             u32 y = 0;
@@ -460,6 +423,11 @@ void game_init(u32 width, u32 height)
     game_state->aspect_ratio = (f32)width / (f32)height;
     game_state->row_count = height / CELL_SIZE;
     game_state->column_count = width / CELL_SIZE;
+
+    game_state->primary_acent_color = MAXIMUM_RED_COLOR;
+    game_state->primary_base_color = WHITE_COFFE_COLOR;
+    game_state->secondary_acent_color = RAISIN_BLACK_COLOR;
+    game_state->theme = 1;
 
     snake_init(game_state);
     game_restart(game_state);
