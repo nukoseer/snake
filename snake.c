@@ -10,7 +10,7 @@
 
 #define MAXIMUM_RED_COLOR     (0xDA1A21FF)
 #define WHITE_COFFE_COLOR     (0xECE0D3FF)
-#define RAISIN_BLACK_COLOR    (0x212120CE)
+#define RAISIN_BLACK_COLOR    (0x212120FF)
 #define MINT_CREAM_COLOR      (0xF5FBFCFF)
 
 typedef struct Cell
